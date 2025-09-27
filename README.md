@@ -91,12 +91,15 @@ A comprehensive booking website for Friends of Brighton College Dubai Padel & Fi
 
 ## Booking Rules
 
-1. **Booking Opens:** Saturday 12:00 PM
+1. **Booking Schedule:** 
+   - **Fitness:** Opens Saturday 12:00 PM GST, closes Wednesday 6:00 PM GST
+   - **Padel:** Opens Sunday 12:00 PM GST, closes Thursday 6:00 PM GST
 2. **Duplicate Prevention:** Same name cannot book the same slot twice
 3. **Capacity Management:** 
    - Padel: 12 spots per time slot
    - Fitness: 20 spots total
 4. **Reserve System:** Automatic overflow to reserve list when capacity is reached
+5. **Automatic Closure:** System automatically closes bookings at scheduled times
 
 ## Message Formats
 

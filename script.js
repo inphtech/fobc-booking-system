@@ -34,24 +34,42 @@ function saveBookingData() {
     localStorage.setItem('fobc-booking-status', JSON.stringify(bookingStatus));
 }
 
-// Check for automatic booking closure
+// Check for automatic booking closure and opening
 function checkAutoClose() {
     const now = new Date();
     const gstOffset = 4 * 60; // GST is UTC+4
     const gstTime = new Date(now.getTime() + (gstOffset * 60 * 1000));
     
-    const day = gstTime.getDay(); // 0 = Sunday, 3 = Wednesday, 4 = Thursday
+    const day = gstTime.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     const hour = gstTime.getHours();
     
-    // Close fitness booking at 6pm GST on Wednesdays (day 3)
-    if (day === 3 && hour >= 18) {
+    // Fitness booking schedule
+    if (day === 6 && hour >= 12) {
+        // Open fitness booking on Saturday at 12pm GST
+        bookingStatus.fitness = true;
+    } else if (day === 3 && hour >= 18) {
+        // Close fitness booking at 6pm GST on Wednesdays
+        bookingStatus.fitness = false;
+    } else if (day < 6 || (day === 6 && hour < 12)) {
+        // Keep fitness closed until Saturday 12pm
         bookingStatus.fitness = false;
     }
     
-    // Close padel booking at 6pm GST on Thursdays (day 4)
-    if (day === 4 && hour >= 18) {
+    // Padel booking schedule
+    if (day === 0 && hour >= 12) {
+        // Open padel booking on Sunday at 12pm GST
+        bookingStatus.padel = true;
+    } else if (day === 4 && hour >= 18) {
+        // Close padel booking at 6pm GST on Thursdays
+        bookingStatus.padel = false;
+    } else if (day === 0 && hour < 12) {
+        // Keep padel closed until Sunday 12pm
+        bookingStatus.padel = false;
+    } else if (day === 5 || day === 6) {
+        // Keep padel closed on Friday and Saturday
         bookingStatus.padel = false;
     }
+    // Padel remains open Monday-Thursday until 6pm Thursday
 }
 
 // Update booking status display
