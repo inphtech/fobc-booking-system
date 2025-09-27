@@ -206,16 +206,30 @@ function updateSlot(slotId) {
     // Add click-to-cancel functionality
     data.booked.forEach((name, index) => {
         const li = playersList.children[index];
-        li.style.cursor = 'pointer';
-        li.title = 'Click to cancel booking';
-        li.onclick = () => cancelBooking(slotId, name, 'booked');
+        if (li) {
+            li.style.cursor = 'pointer';
+            li.title = 'Click to cancel booking';
+            li.style.userSelect = 'none';
+            li.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                cancelBooking(slotId, name, 'booked');
+            });
+        }
     });
     
     data.reserve.forEach((name, index) => {
         const li = reservePlayersList.children[index];
-        li.style.cursor = 'pointer';
-        li.title = 'Click to cancel booking';
-        li.onclick = () => cancelBooking(slotId, name, 'reserve');
+        if (li) {
+            li.style.cursor = 'pointer';
+            li.title = 'Click to cancel booking';
+            li.style.userSelect = 'none';
+            li.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                cancelBooking(slotId, name, 'reserve');
+            });
+        }
     });
     
     // Disable booking if closed

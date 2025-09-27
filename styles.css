@@ -236,10 +236,21 @@ header {
     border-radius: 15px;
     font-size: 0.85rem;
     font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.players-list li:hover, .reserve-players-list li:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    background: #5a67d8;
 }
 
 .reserve-players-list li {
     background: #ff9800;
+}
+
+.reserve-players-list li:hover {
+    background: #f57c00;
 }
 
 /* Admin Panel */
