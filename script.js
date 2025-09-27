@@ -276,7 +276,11 @@ function updateSlot(slotId) {
             li.style.cursor = 'pointer';
             li.title = 'Click to cancel booking';
             li.style.userSelect = 'none';
-            li.addEventListener('click', function(e) {
+            li.classList.add('clickable-name');
+            // Remove any existing event listeners
+            li.replaceWith(li.cloneNode(true));
+            const newLi = playersList.children[index];
+            newLi.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 cancelBooking(slotId, name, 'booked');
@@ -290,7 +294,11 @@ function updateSlot(slotId) {
             li.style.cursor = 'pointer';
             li.title = 'Click to cancel booking';
             li.style.userSelect = 'none';
-            li.addEventListener('click', function(e) {
+            li.classList.add('clickable-name');
+            // Remove any existing event listeners
+            li.replaceWith(li.cloneNode(true));
+            const newLi = reservePlayersList.children[index];
+            newLi.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 cancelBooking(slotId, name, 'reserve');
