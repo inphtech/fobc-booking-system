@@ -108,12 +108,43 @@ header {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
 .booking-section h2 {
     font-size: 1.8rem;
     font-weight: 700;
-    margin-bottom: 1rem;
+    margin: 0;
     color: #333;
-    text-align: center;
+}
+
+.section-status {
+    display: flex;
+    align-items: center;
+}
+
+.status-indicator {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: #4CAF50;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.status-indicator.closed {
+    background: #f44336;
+}
+
+.status-indicator.partial {
+    background: #ff9800;
 }
 
 .booking-info {

@@ -82,17 +82,27 @@ function updateBookingStatus() {
     const fitnessSection = document.querySelector('.fitness-section');
     
     // Update padel section status
+    const padelStatusElement = document.getElementById('padel-status');
     if (bookingStatus.padel) {
         padelSection.classList.remove('booking-closed');
+        padelStatusElement.textContent = 'Open';
+        padelStatusElement.className = 'status-indicator';
     } else {
         padelSection.classList.add('booking-closed');
+        padelStatusElement.textContent = 'Closed';
+        padelStatusElement.className = 'status-indicator closed';
     }
     
     // Update fitness section status
+    const fitnessStatusElement = document.getElementById('fitness-status');
     if (bookingStatus.fitness) {
         fitnessSection.classList.remove('booking-closed');
+        fitnessStatusElement.textContent = 'Open';
+        fitnessStatusElement.className = 'status-indicator';
     } else {
         fitnessSection.classList.add('booking-closed');
+        fitnessStatusElement.textContent = 'Closed';
+        fitnessStatusElement.className = 'status-indicator closed';
     }
     
     // Update main status display
