@@ -182,7 +182,7 @@ class BookingHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         super().__init__(*args, **kwargs)
     
     def end_headers(self):
-        # Add CORS headers
+        # Add CORS headers for cross-platform compatibility
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
@@ -252,14 +252,14 @@ class BookingHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     PORT = 5000
-    HOST = "0.0.0.0"  # Allow all hosts for Replit proxy
+    HOST = "0.0.0.0"  # Allow all hosts for Replit proxy and cross-platform access
     
     # Change to the directory containing the static files
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
     with socketserver.TCPServer((HOST, PORT), BookingHTTPRequestHandler) as httpd:
-        print(f"Server running at http://{HOST}:{PORT}/")
-        print("Serving booking system with database backend...")
+        print(f"FOBC Booking Server running at http://{HOST}:{PORT}/")
+        print("Multi-client database backend with SQLite...")
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
