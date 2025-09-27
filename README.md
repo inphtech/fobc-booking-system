@@ -36,7 +36,7 @@ A comprehensive booking website for Friends of Brighton College Dubai Padel & Fi
 1. **Create a new Repl:**
    - Go to [replit.com](https://replit.com)
    - Click "Create Repl"
-   - Choose "HTML, CSS, JS" template
+   - Choose "Python" template (for server-side database support)
    - Name your repl (e.g., "fobc-booking")
 
 2. **Upload files:**
@@ -45,12 +45,20 @@ A comprehensive booking website for Friends of Brighton College Dubai Padel & Fi
      - `index.html`
      - `styles.css`
      - `script.js`
-     - `logo.svg`
+     - `server.py`
+     - `logo.svg` / `logo.jpg`
      - `README.md`
+     - `.replit` (configuration file)
 
-3. **Run the website:**
+3. **Run the server:**
    - Click the "Run" button
-   - Your booking website will be live and accessible via the provided URL
+   - The Python server will start with database support
+   - Your booking website will be live with cross-device synchronization
+   - The SQLite database will be automatically created on first run
+
+4. **Access the website:**
+   - Use the provided Replit URL to access your booking system
+   - All bookings will be synchronized across devices in real-time
 
 ## Usage Instructions
 
@@ -85,10 +93,13 @@ A comprehensive booking website for Friends of Brighton College Dubai Padel & Fi
 
 ## Technical Details
 
-- **Storage:** Uses browser localStorage to persist booking data
+- **Cross-Device Synchronization:** Server-side SQLite database enables booking persistence across all devices
+- **Hybrid Storage:** Uses server API with localStorage fallback for offline functionality
 - **Responsive Design:** Works on desktop, tablet, and mobile devices
-- **Real-time Updates:** Booking counts and lists update immediately
-- **Data Persistence:** Bookings are saved automatically every 30 seconds
+- **Real-time Updates:** Booking counts and lists update immediately across all connected devices
+- **Data Persistence:** Bookings are saved automatically to server database
+- **Thread-Safe Operations:** Concurrent booking requests handled safely with database locking
+- **REST API:** Full API backend for booking operations with CORS support
 
 ## Booking Rules
 
