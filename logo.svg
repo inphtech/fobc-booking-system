@@ -1,0 +1,19 @@
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="90" fill="#667eea" stroke="#5a67d8" stroke-width="3"/>
+  
+  <!-- Padel rackets -->
+  <ellipse cx="75" cy="65" rx="15" ry="12" fill="none" stroke="white" stroke-width="3"/>
+  <ellipse cx="125" cy="65" rx="15" ry="12" fill="none" stroke="white" stroke-width="3"/>
+  <line x1="75" y1="77" x2="75" y2="100" stroke="white" stroke-width="4"/>
+  <line x1="125" y1="77" x2="125" y2="100" stroke="white" stroke-width="4"/>
+  
+  <!-- Fitness dumbbell -->
+  <circle cx="77" cy="125" r="7" fill="white"/>
+  <circle cx="123" cy="125" r="7" fill="white"/>
+  <rect x="84" y="122" width="32" height="6" fill="white"/>
+  
+  <!-- Text -->
+  <text x="100" y="160" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="18" font-weight="bold">FOBC</text>
+  <text x="100" y="180" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">Padel & Fitness</text>
+</svg>

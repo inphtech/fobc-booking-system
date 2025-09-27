@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOBC - Booking System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo-section">
+                <img src="logo.svg" alt="FOBC Logo" class="logo">
+                <h1>Friends of Brighton College Dubai</h1>
+                <p>Padel & Fitness Club</p>
+            </div>
+            <div class="booking-status">
+                <span id="booking-status">Booking Open</span>
+                <button id="admin-btn" onclick="toggleAdmin()">Admin</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <!-- Padel Booking Section -->
+        <section class="booking-section padel-section">
+            <h2>🏓 Padel Booking</h2>
+            <div class="booking-info">
+                <p><strong>Booking opens:</strong> Saturday 12:00 PM</p>
+                <p><strong>Places per slot:</strong> 12 (Reserve list available)</p>
+            </div>
+
+            <div class="time-slots">
+                <div class="time-slot" data-slot="padel-1">
+                    <h3>6:30 AM - 7:30 AM</h3>
+                    <div class="slot-info">
+                        <span class="available-spots">12 spots available</span>
+                        <span class="reserve-count">0 on reserve</span>
+                    </div>
+                    <div class="booking-form">
+                        <input type="text" placeholder="Enter your name" class="name-input">
+                        <button onclick="addBooking('padel-1')">Book Slot</button>
+                    </div>
+                    <div class="booked-list">
+                        <h4>Booked Players:</h4>
+                        <ul class="players-list"></ul>
+                    </div>
+                    <div class="reserve-list" style="display: none;">
+                        <h4>Reserve List:</h4>
+                        <ul class="reserve-players-list"></ul>
+                    </div>
+                </div>
+
+                <div class="time-slot" data-slot="padel-2">
+                    <h3>7:30 AM - 8:30 AM</h3>
+                    <div class="slot-info">
+                        <span class="available-spots">12 spots available</span>
+                        <span class="reserve-count">0 on reserve</span>
+                    </div>
+                    <div class="booking-form">
+                        <input type="text" placeholder="Enter your name" class="name-input">
+                        <button onclick="addBooking('padel-2')">Book Slot</button>
+                    </div>
+                    <div class="booked-list">
+                        <h4>Booked Players:</h4>
+                        <ul class="players-list"></ul>
+                    </div>
+                    <div class="reserve-list" style="display: none;">
+                        <h4>Reserve List:</h4>
+                        <ul class="reserve-players-list"></ul>
+                    </div>
+                </div>
+
+                <div class="time-slot" data-slot="padel-3">
+                    <h3>8:30 AM - 9:30 AM</h3>
+                    <div class="slot-info">
+                        <span class="available-spots">12 spots available</span>
+                        <span class="reserve-count">0 on reserve</span>
+                    </div>
+                    <div class="booking-form">
+                        <input type="text" placeholder="Enter your name" class="name-input">
+                        <button onclick="addBooking('padel-3')">Book Slot</button>
+                    </div>
+                    <div class="booked-list">
+                        <h4>Booked Players:</h4>
+                        <ul class="players-list"></ul>
+                    </div>
+                    <div class="reserve-list" style="display: none;">
+                        <h4>Reserve List:</h4>
+                        <ul class="reserve-players-list"></ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Fitness Booking Section -->
+        <section class="booking-section fitness-section">
+            <h2>💪 Fitness Booking</h2>
+            <div class="booking-info">
+                <p><strong>Booking opens:</strong> Saturday 12:00 PM</p>
+                <p><strong>Places available:</strong> 20 (Reserve list available)</p>
+            </div>
+
+            <div class="time-slots">
+                <div class="time-slot" data-slot="fitness-1">
+                    <h3>Fitness Session</h3>
+                    <div class="slot-info">
+                        <span class="available-spots">20 spots available</span>
+                        <span class="reserve-count">0 on reserve</span>
+                    </div>
+                    <div class="booking-form">
+                        <input type="text" placeholder="Enter your name" class="name-input">
+                        <button onclick="addBooking('fitness-1')">Book Slot</button>
+                    </div>
+                    <div class="booked-list">
+                        <h4>Booked Members:</h4>
+                        <ul class="players-list"></ul>
+                    </div>
+                    <div class="reserve-list" style="display: none;">
+                        <h4>Reserve List:</h4>
+                        <ul class="reserve-players-list"></ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Admin Panel -->
+    <div id="admin-panel" class="admin-panel" style="display: none;">
+        <div class="admin-content">
+            <h2>Admin Panel</h2>
+            <div class="admin-controls">
+                <div class="control-group">
+                    <h3>Booking Controls</h3>
+                    <button id="toggle-padel" onclick="togglePadelBooking()">Toggle Padel Booking</button>
+                    <button id="toggle-fitness" onclick="toggleFitnessBooking()">Toggle Fitness Booking</button>
+                    <button onclick="clearAllBookings()">Clear All Bookings</button>
+                </div>
+                
+                <div class="control-group">
+                    <h3>Message Generation</h3>
+                    <button onclick="generatePadelMessage()">Generate Padel WhatsApp</button>
+                    <button onclick="generateFitnessMessage()">Generate Fitness WhatsApp</button>
+                    <button onclick="generateMessage()">Generate Combined WhatsApp</button>
+                    <button onclick="generateEmail()">Generate Email</button>
+                </div>
+                
+                <div class="control-group">
+                    <h3>Admin Actions</h3>
+                    <button onclick="copyMessage()">Copy Message</button>
+                    <button onclick="toggleAdmin()">Close Admin</button>
+                </div>
+            </div>
+            <div class="message-output">
+                <h3>Generated Message:</h3>
+                <textarea id="generated-message" readonly rows="12"></textarea>
+                <div class="cancel-info">
+                    <p><strong>💡 Tip:</strong> Click on any name in the booking lists to cancel that booking</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

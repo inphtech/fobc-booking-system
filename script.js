@@ -1,0 +1,583 @@
+// Booking system state
+let bookingData = {
+    'padel-1': { booked: [], reserve: [], maxCapacity: 12 },
+    'padel-2': { booked: [], reserve: [], maxCapacity: 12 },
+    'padel-3': { booked: [], reserve: [], maxCapacity: 12 },
+    'fitness-1': { booked: [], reserve: [], maxCapacity: 20 }
+};
+
+let bookingStatus = {
+    padel: true,
+    fitness: true
+};
+
+// Load data from localStorage on page load
+function loadBookingData() {
+    const saved = localStorage.getItem('fobc-booking-data');
+    if (saved) {
+        bookingData = JSON.parse(saved);
+    }
+    
+    const savedStatus = localStorage.getItem('fobc-booking-status');
+    if (savedStatus !== null) {
+        bookingStatus = JSON.parse(savedStatus);
+    }
+    
+    checkAutoClose();
+    updateBookingStatus();
+    updateAllSlots();
+}
+
+// Save data to localStorage
+function saveBookingData() {
+    localStorage.setItem('fobc-booking-data', JSON.stringify(bookingData));
+    localStorage.setItem('fobc-booking-status', JSON.stringify(bookingStatus));
+}
+
+// Check for automatic booking closure
+function checkAutoClose() {
+    const now = new Date();
+    const gstOffset = 4 * 60; // GST is UTC+4
+    const gstTime = new Date(now.getTime() + (gstOffset * 60 * 1000));
+    
+    const day = gstTime.getDay(); // 0 = Sunday, 3 = Wednesday, 4 = Thursday
+    const hour = gstTime.getHours();
+    
+    // Close fitness booking at 6pm GST on Wednesdays (day 3)
+    if (day === 3 && hour >= 18) {
+        bookingStatus.fitness = false;
+    }
+    
+    // Close padel booking at 6pm GST on Thursdays (day 4)
+    if (day === 4 && hour >= 18) {
+        bookingStatus.padel = false;
+    }
+}
+
+// Update booking status display
+function updateBookingStatus() {
+    const padelSection = document.querySelector('.padel-section');
+    const fitnessSection = document.querySelector('.fitness-section');
+    
+    // Update padel section status
+    if (bookingStatus.padel) {
+        padelSection.classList.remove('booking-closed');
+    } else {
+        padelSection.classList.add('booking-closed');
+    }
+    
+    // Update fitness section status
+    if (bookingStatus.fitness) {
+        fitnessSection.classList.remove('booking-closed');
+    } else {
+        fitnessSection.classList.add('booking-closed');
+    }
+    
+    // Update main status display
+    const statusElement = document.getElementById('booking-status');
+    if (bookingStatus.padel && bookingStatus.fitness) {
+        statusElement.textContent = 'Booking Open';
+        statusElement.className = '';
+    } else if (!bookingStatus.padel && !bookingStatus.fitness) {
+        statusElement.textContent = 'Booking Closed';
+        statusElement.className = 'closed';
+    } else {
+        statusElement.textContent = 'Partial Booking';
+        statusElement.className = 'partial';
+    }
+}
+
+// Add booking to a slot
+function addBooking(slotId) {
+    const slotType = slotId.includes('padel') ? 'padel' : 'fitness';
+    
+    if (!bookingStatus[slotType]) {
+        alert(`${slotType.charAt(0).toUpperCase() + slotType.slice(1)} booking is currently closed.`);
+        return;
+    }
+    
+    const slot = document.querySelector(`[data-slot="${slotId}"]`);
+    const nameInput = slot.querySelector('.name-input');
+    const name = nameInput.value.trim();
+    
+    if (!name) {
+        alert('Please enter your name.');
+        nameInput.focus();
+        return;
+    }
+    
+    // Check if name already exists in this slot
+    if (bookingData[slotId].booked.includes(name) || bookingData[slotId].reserve.includes(name)) {
+        alert('This name is already registered for this slot.');
+        nameInput.value = '';
+        return;
+    }
+    
+    // Add to booked list or reserve list
+    if (bookingData[slotId].booked.length < bookingData[slotId].maxCapacity) {
+        bookingData[slotId].booked.push(name);
+    } else {
+        bookingData[slotId].reserve.push(name);
+    }
+    
+    nameInput.value = '';
+    updateSlot(slotId);
+    saveBookingData();
+    
+    // Show success message
+    const isReserve = bookingData[slotId].booked.length > bookingData[slotId].maxCapacity;
+    
+    if (isReserve) {
+        alert(`${name} has been added to the reserve list for ${slotType}.`);
+    } else {
+        alert(`${name} has been successfully booked for ${slotType}.`);
+    }
+}
+
+// Update a specific slot display
+function updateSlot(slotId) {
+    const slot = document.querySelector(`[data-slot="${slotId}"]`);
+    const data = bookingData[slotId];
+    
+    // Update available spots
+    const availableSpots = slot.querySelector('.available-spots');
+    const remaining = Math.max(0, data.maxCapacity - data.booked.length);
+    availableSpots.textContent = `${remaining} spots available`;
+    
+    // Update reserve count
+    const reserveCount = slot.querySelector('.reserve-count');
+    reserveCount.textContent = `${data.reserve.length} on reserve`;
+    
+    // Update booked players list
+    const playersList = slot.querySelector('.players-list');
+    playersList.innerHTML = '';
+    data.booked.forEach(name => {
+        const li = document.createElement('li');
+        li.textContent = name;
+        playersList.appendChild(li);
+    });
+    
+    // Update reserve list
+    const reserveList = slot.querySelector('.reserve-list');
+    const reservePlayersList = slot.querySelector('.reserve-players-list');
+    
+    if (data.reserve.length > 0) {
+        reserveList.style.display = 'block';
+        reservePlayersList.innerHTML = '';
+        data.reserve.forEach(name => {
+            const li = document.createElement('li');
+            li.textContent = name;
+            reservePlayersList.appendChild(li);
+        });
+    } else {
+        reserveList.style.display = 'none';
+    }
+    
+    // Update slot styling
+    if (data.booked.length >= data.maxCapacity) {
+        slot.classList.add('full');
+        availableSpots.textContent = 'FULL';
+    } else {
+        slot.classList.remove('full');
+    }
+    
+    // Add click-to-cancel functionality
+    data.booked.forEach((name, index) => {
+        const li = playersList.children[index];
+        li.style.cursor = 'pointer';
+        li.title = 'Click to cancel booking';
+        li.onclick = () => cancelBooking(slotId, name, 'booked');
+    });
+    
+    data.reserve.forEach((name, index) => {
+        const li = reservePlayersList.children[index];
+        li.style.cursor = 'pointer';
+        li.title = 'Click to cancel booking';
+        li.onclick = () => cancelBooking(slotId, name, 'reserve');
+    });
+    
+    // Disable booking if closed
+    const button = slot.querySelector('.booking-form button');
+    const input = slot.querySelector('.name-input');
+    const slotType = slotId.includes('padel') ? 'padel' : 'fitness';
+    
+    if (!bookingStatus[slotType]) {
+        button.disabled = true;
+        input.disabled = true;
+    } else {
+        button.disabled = false;
+        input.disabled = false;
+    }
+}
+
+// Cancel a booking
+function cancelBooking(slotId, name, listType) {
+    if (confirm(`Are you sure you want to cancel ${name}'s booking?`)) {
+        const data = bookingData[slotId];
+        
+        if (listType === 'booked') {
+            const index = data.booked.indexOf(name);
+            if (index > -1) {
+                data.booked.splice(index, 1);
+                
+                // Move first person from reserve to booked if available
+                if (data.reserve.length > 0) {
+                    const reserveName = data.reserve.shift();
+                    data.booked.push(reserveName);
+                }
+            }
+        } else if (listType === 'reserve') {
+            const index = data.reserve.indexOf(name);
+            if (index > -1) {
+                data.reserve.splice(index, 1);
+            }
+        }
+        
+        updateSlot(slotId);
+        saveBookingData();
+        alert(`${name}'s booking has been cancelled.`);
+    }
+}
+
+// Update all slots
+function updateAllSlots() {
+    Object.keys(bookingData).forEach(slotId => {
+        updateSlot(slotId);
+    });
+}
+
+// Toggle admin panel
+function toggleAdmin() {
+    const adminPanel = document.getElementById('admin-panel');
+    if (adminPanel.style.display === 'none' || !adminPanel.style.display) {
+        adminPanel.style.display = 'flex';
+    } else {
+        adminPanel.style.display = 'none';
+    }
+}
+
+// Toggle padel booking status
+function togglePadelBooking() {
+    bookingStatus.padel = !bookingStatus.padel;
+    updateBookingStatus();
+    updateAllSlots();
+    saveBookingData();
+    
+    const status = bookingStatus.padel ? 'opened' : 'closed';
+    alert(`Padel booking has been ${status}.`);
+}
+
+// Toggle fitness booking status
+function toggleFitnessBooking() {
+    bookingStatus.fitness = !bookingStatus.fitness;
+    updateBookingStatus();
+    updateAllSlots();
+    saveBookingData();
+    
+    const status = bookingStatus.fitness ? 'opened' : 'closed';
+    alert(`Fitness booking has been ${status}.`);
+}
+
+// Clear all bookings
+function clearAllBookings() {
+    if (confirm('Are you sure you want to clear all bookings? This action cannot be undone.')) {
+        Object.keys(bookingData).forEach(slotId => {
+            bookingData[slotId].booked = [];
+            bookingData[slotId].reserve = [];
+        });
+        updateAllSlots();
+        saveBookingData();
+        alert('All bookings have been cleared.');
+    }
+}
+
+// Generate WhatsApp message for Padel
+function generatePadelMessage() {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    
+    let message = `🏓 FOBC Padel Booking - ${dateStr}\n\n`;
+    
+    const padelSlots = [
+        { id: 'padel-1', time: '6:30 AM - 7:30 AM' },
+        { id: 'padel-2', time: '7:30 AM - 8:30 AM' },
+        { id: 'padel-3', time: '8:30 AM - 9:30 AM' }
+    ];
+    
+    padelSlots.forEach(slot => {
+        const data = bookingData[slot.id];
+        message += `⏰ ${slot.time}\n`;
+        message += `👥 Confirmed (${data.booked.length}/${data.maxCapacity}):\n`;
+        
+        if (data.booked.length > 0) {
+            data.booked.forEach((name, index) => {
+                message += `${index + 1}. ${name}\n`;
+            });
+        } else {
+            message += `No bookings yet\n`;
+        }
+        
+        if (data.reserve.length > 0) {
+            message += `\n📋 Reserve List (${data.reserve.length}):\n`;
+            data.reserve.forEach((name, index) => {
+                message += `${index + 1}. ${name}\n`;
+            });
+        }
+        
+        message += `\n`;
+    });
+    
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `📱 Friends of Brighton College Dubai\n`;
+    message += `🏓 Padel Club\n\n`;
+    message += `Please arrive 10 minutes before your session time.\n`;
+    message += `For any changes, please contact the admin.`;
+    
+    document.getElementById('generated-message').value = message;
+}
+
+// Generate WhatsApp message for Fitness
+function generateFitnessMessage() {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    
+    let message = `💪 FOBC Fitness Booking - ${dateStr}\n\n`;
+    
+    const fitnessData = bookingData['fitness-1'];
+    message += `👥 Confirmed (${fitnessData.booked.length}/${fitnessData.maxCapacity}):\n`;
+    
+    if (fitnessData.booked.length > 0) {
+        fitnessData.booked.forEach((name, index) => {
+            message += `${index + 1}. ${name}\n`;
+        });
+    } else {
+        message += `No bookings yet\n`;
+    }
+    
+    if (fitnessData.reserve.length > 0) {
+        message += `\n📋 Reserve List (${fitnessData.reserve.length}):\n`;
+        fitnessData.reserve.forEach((name, index) => {
+            message += `${index + 1}. ${name}\n`;
+        });
+    }
+    
+    message += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `📱 Friends of Brighton College Dubai\n`;
+    message += `💪 Fitness Club\n\n`;
+    message += `Please arrive 10 minutes before your session time.\n`;
+    message += `For any changes, please contact the admin.`;
+    
+    document.getElementById('generated-message').value = message;
+}
+
+// Generate combined WhatsApp message
+function generateMessage() {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    
+    let message = `🏓 FOBC Booking Summary - ${dateStr}\n\n`;
+    
+    // Padel bookings
+    message += `🏓 PADEL BOOKINGS:\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+    
+    const padelSlots = [
+        { id: 'padel-1', time: '6:30 AM - 7:30 AM' },
+        { id: 'padel-2', time: '7:30 AM - 8:30 AM' },
+        { id: 'padel-3', time: '8:30 AM - 9:30 AM' }
+    ];
+    
+    padelSlots.forEach(slot => {
+        const data = bookingData[slot.id];
+        message += `⏰ ${slot.time}\n`;
+        message += `👥 Confirmed (${data.booked.length}/${data.maxCapacity}):\n`;
+        
+        if (data.booked.length > 0) {
+            data.booked.forEach((name, index) => {
+                message += `${index + 1}. ${name}\n`;
+            });
+        } else {
+            message += `No bookings yet\n`;
+        }
+        
+        if (data.reserve.length > 0) {
+            message += `\n📋 Reserve List (${data.reserve.length}):\n`;
+            data.reserve.forEach((name, index) => {
+                message += `${index + 1}. ${name}\n`;
+            });
+        }
+        
+        message += `\n`;
+    });
+    
+    // Fitness bookings
+    message += `💪 FITNESS BOOKINGS:\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+    
+    const fitnessData = bookingData['fitness-1'];
+    message += `👥 Confirmed (${fitnessData.booked.length}/${fitnessData.maxCapacity}):\n`;
+    
+    if (fitnessData.booked.length > 0) {
+        fitnessData.booked.forEach((name, index) => {
+            message += `${index + 1}. ${name}\n`;
+        });
+    } else {
+        message += `No bookings yet\n`;
+    }
+    
+    if (fitnessData.reserve.length > 0) {
+        message += `\n📋 Reserve List (${fitnessData.reserve.length}):\n`;
+        fitnessData.reserve.forEach((name, index) => {
+            message += `${index + 1}. ${name}\n`;
+        });
+    }
+    
+    message += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `📱 Friends of Brighton College Dubai\n`;
+    message += `🏓 Padel & Fitness Club\n\n`;
+    message += `Please arrive 10 minutes before your session time.\n`;
+    message += `For any changes, please contact the admin.`;
+    
+    document.getElementById('generated-message').value = message;
+}
+
+// Generate email format
+function generateEmail() {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    
+    let message = `Subject: FOBC Booking Summary - ${dateStr}\n\n`;
+    message += `Dear FOBC Members,\n\n`;
+    message += `Please find below the booking summary for ${dateStr}:\n\n`;
+    
+    // Padel bookings
+    message += `PADEL BOOKINGS:\n`;
+    message += `================\n\n`;
+    
+    const padelSlots = [
+        { id: 'padel-1', time: '6:30 AM - 7:30 AM' },
+        { id: 'padel-2', time: '7:30 AM - 8:30 AM' },
+        { id: 'padel-3', time: '8:30 AM - 9:30 AM' }
+    ];
+    
+    padelSlots.forEach(slot => {
+        const data = bookingData[slot.id];
+        message += `Time Slot: ${slot.time}\n`;
+        message += `Confirmed Players (${data.booked.length}/${data.maxCapacity}):\n`;
+        
+        if (data.booked.length > 0) {
+            data.booked.forEach((name, index) => {
+                message += `  ${index + 1}. ${name}\n`;
+            });
+        } else {
+            message += `  No bookings yet\n`;
+        }
+        
+        if (data.reserve.length > 0) {
+            message += `\nReserve List (${data.reserve.length}):\n`;
+            data.reserve.forEach((name, index) => {
+                message += `  ${index + 1}. ${name}\n`;
+            });
+        }
+        
+        message += `\n`;
+    });
+    
+    // Fitness bookings
+    message += `FITNESS BOOKINGS:\n`;
+    message += `=================\n\n`;
+    
+    const fitnessData = bookingData['fitness-1'];
+    message += `Confirmed Members (${fitnessData.booked.length}/${fitnessData.maxCapacity}):\n`;
+    
+    if (fitnessData.booked.length > 0) {
+        fitnessData.booked.forEach((name, index) => {
+            message += `  ${index + 1}. ${name}\n`;
+        });
+    } else {
+        message += `  No bookings yet\n`;
+    }
+    
+    if (fitnessData.reserve.length > 0) {
+        message += `\nReserve List (${fitnessData.reserve.length}):\n`;
+        fitnessData.reserve.forEach((name, index) => {
+            message += `  ${index + 1}. ${name}\n`;
+        });
+    }
+    
+    message += `\n================\n\n`;
+    message += `Important Reminders:\n`;
+    message += `• Please arrive 10 minutes before your session time\n`;
+    message += `• Bring appropriate sports attire and equipment\n`;
+    message += `• For any changes or cancellations, please contact the admin immediately\n\n`;
+    message += `Best regards,\n`;
+    message += `Friends of Brighton College Dubai\n`;
+    message += `Padel & Fitness Club Administration`;
+    
+    document.getElementById('generated-message').value = message;
+}
+
+// Copy message to clipboard
+function copyMessage() {
+    const messageTextarea = document.getElementById('generated-message');
+    messageTextarea.select();
+    messageTextarea.setSelectionRange(0, 99999); // For mobile devices
+    
+    try {
+        document.execCommand('copy');
+        alert('Message copied to clipboard!');
+    } catch (err) {
+        // Fallback for modern browsers
+        navigator.clipboard.writeText(messageTextarea.value).then(() => {
+            alert('Message copied to clipboard!');
+        }).catch(() => {
+            alert('Failed to copy message. Please copy manually.');
+        });
+    }
+}
+
+// Handle Enter key in name inputs
+document.addEventListener('DOMContentLoaded', function() {
+    loadBookingData();
+    
+    // Add event listeners for Enter key
+    document.querySelectorAll('.name-input').forEach(input => {
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const slot = this.closest('.time-slot');
+                const slotId = slot.getAttribute('data-slot');
+                addBooking(slotId);
+            }
+        });
+    });
+    
+    // Close admin panel when clicking outside
+    document.getElementById('admin-panel').addEventListener('click', function(e) {
+        if (e.target === this) {
+            toggleAdmin();
+        }
+    });
+});
+
+// Auto-save every 30 seconds
+setInterval(saveBookingData, 30000);
