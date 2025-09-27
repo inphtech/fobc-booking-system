@@ -18,23 +18,37 @@ let isAdminAuthenticated = false;
 // Load data from server API
 async function loadBookingData() {
     try {
+        console.log('Attempting to load data from server...');
+        
         // Load bookings from server
         const bookingsResponse = await fetch('/api/bookings');
         if (bookingsResponse.ok) {
             bookingData = await bookingsResponse.json();
+            console.log('✅ Successfully loaded bookings from server:', bookingData);
+            
+            // Show server status in UI
+            updateServerStatus(true);
+        } else {
+            throw new Error(`Server responded with status: ${bookingsResponse.status}`);
         }
         
         // Load booking status from server
         const statusResponse = await fetch('/api/status');
         if (statusResponse.ok) {
             bookingStatus = await statusResponse.json();
+            console.log('✅ Successfully loaded status from server:', bookingStatus);
         }
     } catch (error) {
-        console.log('Server not available, using localStorage fallback');
+        console.log('❌ Server not available, using localStorage fallback:', error.message);
+        
+        // Show server status in UI
+        updateServerStatus(false);
+        
         // Fallback to localStorage if server is not available
         const saved = localStorage.getItem('fobc-booking-data');
         if (saved) {
             bookingData = JSON.parse(saved);
+            console.log('📱 Loaded data from localStorage:', bookingData);
         }
         
         const savedStatus = localStorage.getItem('fobc-booking-status');
@@ -46,6 +60,20 @@ async function loadBookingData() {
     checkAutoClose();
     updateBookingStatus();
     updateAllSlots();
+}
+
+// Update server status indicator
+function updateServerStatus(isConnected) {
+    const statusElement = document.getElementById('server-status');
+    if (statusElement) {
+        if (isConnected) {
+            statusElement.textContent = '🟢 Server Connected';
+            statusElement.className = 'server-status connected';
+        } else {
+            statusElement.textContent = '🔴 Offline Mode';
+            statusElement.className = 'server-status offline';
+        }
+    }
 }
 
 // Save data to server API
