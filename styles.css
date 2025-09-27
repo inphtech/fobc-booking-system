@@ -305,6 +305,44 @@ header {
     background: #f57c00;
 }
 
+/* Enhanced clickable name styling */
+.clickable-name {
+    cursor: pointer !important;
+    user-select: none !important;
+    position: relative;
+}
+
+.clickable-name:hover {
+    transform: scale(1.1) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.clickable-name:active {
+    transform: scale(0.95) !important;
+}
+
+.clickable-name::after {
+    content: "✕";
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff4444;
+    color: white;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.clickable-name:hover::after {
+    opacity: 1;
+}
+
 /* Admin Panel */
 .admin-panel {
     position: fixed;
