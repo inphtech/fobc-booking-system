@@ -270,6 +270,13 @@ function updateSlot(slotId) {
     data.booked.forEach(name => {
         const li = document.createElement('li');
         li.textContent = name;
+        li.style.cursor = 'pointer';
+        li.title = 'Click to cancel booking';
+        li.style.userSelect = 'none';
+        li.classList.add('clickable-name');
+        li.setAttribute('data-name', name);
+        li.setAttribute('data-slot', slotId);
+        li.setAttribute('data-list-type', 'booked');
         playersList.appendChild(li);
     });
     
@@ -283,6 +290,13 @@ function updateSlot(slotId) {
         data.reserve.forEach(name => {
             const li = document.createElement('li');
             li.textContent = name;
+            li.style.cursor = 'pointer';
+            li.title = 'Click to cancel booking';
+            li.style.userSelect = 'none';
+            li.classList.add('clickable-name');
+            li.setAttribute('data-name', name);
+            li.setAttribute('data-slot', slotId);
+            li.setAttribute('data-list-type', 'reserve');
             reservePlayersList.appendChild(li);
         });
     } else {
@@ -296,43 +310,6 @@ function updateSlot(slotId) {
     } else {
         slot.classList.remove('full');
     }
-    
-    // Add click-to-cancel functionality
-    data.booked.forEach((name, index) => {
-        const li = playersList.children[index];
-        if (li) {
-            li.style.cursor = 'pointer';
-            li.title = 'Click to cancel booking';
-            li.style.userSelect = 'none';
-            li.classList.add('clickable-name');
-            // Remove any existing event listeners
-            li.replaceWith(li.cloneNode(true));
-            const newLi = playersList.children[index];
-            newLi.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                cancelBooking(slotId, name, 'booked');
-            });
-        }
-    });
-    
-    data.reserve.forEach((name, index) => {
-        const li = reservePlayersList.children[index];
-        if (li) {
-            li.style.cursor = 'pointer';
-            li.title = 'Click to cancel booking';
-            li.style.userSelect = 'none';
-            li.classList.add('clickable-name');
-            // Remove any existing event listeners
-            li.replaceWith(li.cloneNode(true));
-            const newLi = reservePlayersList.children[index];
-            newLi.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                cancelBooking(slotId, name, 'reserve');
-            });
-        }
-    });
     
     // Disable booking if closed
     const button = slot.querySelector('.booking-form button');
@@ -773,6 +750,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 addBooking(slotId);
             }
         });
+    });
+    
+    // Add event delegation for click-to-cancel functionality
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('clickable-name')) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const name = e.target.getAttribute('data-name');
+            const slotId = e.target.getAttribute('data-slot');
+            const listType = e.target.getAttribute('data-list-type');
+            
+            if (name && slotId && listType) {
+                cancelBooking(slotId, name, listType);
+            }
+        }
     });
     
     // Close admin panel when clicking outside
