@@ -11,6 +11,10 @@ let bookingStatus = {
     fitness: true
 };
 
+// Admin password - change this for security
+const ADMIN_PASSWORD = 'Fobc2024@Adm';
+let isAdminAuthenticated = false;
+
 // Load data from localStorage on page load
 function loadBookingData() {
     const saved = localStorage.getItem('fobc-booking-data');
@@ -264,13 +268,34 @@ function updateAllSlots() {
     });
 }
 
+// Authenticate admin
+function authenticateAdmin() {
+    const password = prompt('Enter admin password:');
+    if (password === ADMIN_PASSWORD) {
+        isAdminAuthenticated = true;
+        return true;
+    } else if (password !== null) {
+        alert('Incorrect password. Access denied.');
+    }
+    return false;
+}
+
 // Toggle admin panel
 function toggleAdmin() {
     const adminPanel = document.getElementById('admin-panel');
+    
     if (adminPanel.style.display === 'none' || !adminPanel.style.display) {
+        // Opening admin panel - check authentication
+        if (!isAdminAuthenticated) {
+            if (!authenticateAdmin()) {
+                return; // Exit if authentication failed
+            }
+        }
         adminPanel.style.display = 'flex';
     } else {
+        // Closing admin panel - reset authentication
         adminPanel.style.display = 'none';
+        isAdminAuthenticated = false;
     }
 }
 

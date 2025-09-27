@@ -63,7 +63,8 @@ A comprehensive booking website for Friends of Brighton College Dubai Padel & Fi
 
 ### For Admins
 1. Click the "Admin" button in the top right
-2. **Booking Controls:**
+2. **Enter admin password:** `Fobc2024@Adm` (change this in script.js for security)
+3. **Booking Controls:**
    - **Toggle Padel Booking:** Open/close padel bookings independently
    - **Toggle Fitness Booking:** Open/close fitness bookings independently
    - **Clear All Bookings:** Reset all bookings (use with caution)
