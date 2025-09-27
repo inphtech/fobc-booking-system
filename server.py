@@ -250,6 +250,9 @@ class BookingHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(json.dumps(data).encode('utf-8'))
 
+class ReuseAddrTCPServer(socketserver.TCPServer):
+    allow_reuse_address = True
+
 if __name__ == "__main__":
     PORT = 5000
     HOST = "0.0.0.0"  # Allow all hosts for Replit proxy and cross-platform access
@@ -257,7 +260,7 @@ if __name__ == "__main__":
     # Change to the directory containing the static files
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
-    with socketserver.TCPServer((HOST, PORT), BookingHTTPRequestHandler) as httpd:
+    with ReuseAddrTCPServer((HOST, PORT), BookingHTTPRequestHandler) as httpd:
         print(f"FOBC Booking Server running at http://{HOST}:{PORT}/")
         print("Multi-client database backend with SQLite...")
         try:
