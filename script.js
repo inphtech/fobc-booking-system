@@ -15,16 +15,32 @@ let bookingStatus = {
 const ADMIN_PASSWORD = 'Fobc2024@Adm';
 let isAdminAuthenticated = false;
 
-// Load data from localStorage on page load
-function loadBookingData() {
-    const saved = localStorage.getItem('fobc-booking-data');
-    if (saved) {
-        bookingData = JSON.parse(saved);
-    }
-    
-    const savedStatus = localStorage.getItem('fobc-booking-status');
-    if (savedStatus !== null) {
-        bookingStatus = JSON.parse(savedStatus);
+// Load data from server API
+async function loadBookingData() {
+    try {
+        // Load bookings from server
+        const bookingsResponse = await fetch('/api/bookings');
+        if (bookingsResponse.ok) {
+            bookingData = await bookingsResponse.json();
+        }
+        
+        // Load booking status from server
+        const statusResponse = await fetch('/api/status');
+        if (statusResponse.ok) {
+            bookingStatus = await statusResponse.json();
+        }
+    } catch (error) {
+        console.log('Server not available, using localStorage fallback');
+        // Fallback to localStorage if server is not available
+        const saved = localStorage.getItem('fobc-booking-data');
+        if (saved) {
+            bookingData = JSON.parse(saved);
+        }
+        
+        const savedStatus = localStorage.getItem('fobc-booking-status');
+        if (savedStatus !== null) {
+            bookingStatus = JSON.parse(savedStatus);
+        }
     }
     
     checkAutoClose();
@@ -32,10 +48,23 @@ function loadBookingData() {
     updateAllSlots();
 }
 
-// Save data to localStorage
-function saveBookingData() {
-    localStorage.setItem('fobc-booking-data', JSON.stringify(bookingData));
-    localStorage.setItem('fobc-booking-status', JSON.stringify(bookingStatus));
+// Save data to server API
+async function saveBookingData() {
+    try {
+        // Save to server
+        await fetch('/api/status', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(bookingStatus)
+        });
+    } catch (error) {
+        console.log('Server not available, using localStorage fallback');
+        // Fallback to localStorage if server is not available
+        localStorage.setItem('fobc-booking-data', JSON.stringify(bookingData));
+        localStorage.setItem('fobc-booking-status', JSON.stringify(bookingStatus));
+    }
 }
 
 // Check for automatic booking closure and opening
@@ -120,7 +149,7 @@ function updateBookingStatus() {
 }
 
 // Add booking to a slot
-function addBooking(slotId) {
+async function addBooking(slotId) {
     const slotType = slotId.includes('padel') ? 'padel' : 'fitness';
     
     if (!bookingStatus[slotType]) {
@@ -138,31 +167,58 @@ function addBooking(slotId) {
         return;
     }
     
-    // Check if name already exists in this slot
-    if (bookingData[slotId].booked.includes(name) || bookingData[slotId].reserve.includes(name)) {
-        alert('This name is already registered for this slot.');
+    try {
+        // Try to add booking via server API
+        const response = await fetch('/api/book', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ slot_id: slotId, name: name })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            nameInput.value = '';
+            // Reload data from server to get updated state
+            await loadBookingData();
+            
+            const listType = result.list_type === 'reserve' ? 'reserve list' : 'confirmed booking';
+            alert(`${name} has been added to the ${listType} for ${slotType}.`);
+        } else {
+            alert(result.message || 'Failed to add booking.');
+        }
+    } catch (error) {
+        console.log('Server not available, using localStorage fallback');
+        // Fallback to localStorage logic
+        
+        // Check if name already exists in this slot
+        if (bookingData[slotId].booked.includes(name) || bookingData[slotId].reserve.includes(name)) {
+            alert('This name is already registered for this slot.');
+            nameInput.value = '';
+            return;
+        }
+        
+        // Add to booked list or reserve list
+        if (bookingData[slotId].booked.length < bookingData[slotId].maxCapacity) {
+            bookingData[slotId].booked.push(name);
+        } else {
+            bookingData[slotId].reserve.push(name);
+        }
+        
         nameInput.value = '';
-        return;
-    }
-    
-    // Add to booked list or reserve list
-    if (bookingData[slotId].booked.length < bookingData[slotId].maxCapacity) {
-        bookingData[slotId].booked.push(name);
-    } else {
-        bookingData[slotId].reserve.push(name);
-    }
-    
-    nameInput.value = '';
-    updateSlot(slotId);
-    saveBookingData();
-    
-    // Show success message
-    const isReserve = bookingData[slotId].booked.length > bookingData[slotId].maxCapacity;
-    
-    if (isReserve) {
-        alert(`${name} has been added to the reserve list for ${slotType}.`);
-    } else {
-        alert(`${name} has been successfully booked for ${slotType}.`);
+        updateSlot(slotId);
+        saveBookingData();
+        
+        // Show success message
+        const isReserve = bookingData[slotId].booked.length > bookingData[slotId].maxCapacity;
+        
+        if (isReserve) {
+            alert(`${name} has been added to the reserve list for ${slotType}.`);
+        } else {
+            alert(`${name} has been successfully booked for ${slotType}.`);
+        }
     }
 }
 
@@ -257,31 +313,54 @@ function updateSlot(slotId) {
 }
 
 // Cancel a booking
-function cancelBooking(slotId, name, listType) {
+async function cancelBooking(slotId, name, listType) {
     if (confirm(`Are you sure you want to cancel ${name}'s booking?`)) {
-        const data = bookingData[slotId];
-        
-        if (listType === 'booked') {
-            const index = data.booked.indexOf(name);
-            if (index > -1) {
-                data.booked.splice(index, 1);
-                
-                // Move first person from reserve to booked if available
-                if (data.reserve.length > 0) {
-                    const reserveName = data.reserve.shift();
-                    data.booked.push(reserveName);
+        try {
+            // Try to cancel booking via server API
+            const response = await fetch('/api/cancel', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ slot_id: slotId, name: name })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // Reload data from server to get updated state
+                await loadBookingData();
+                alert(`${name}'s booking has been cancelled.`);
+            } else {
+                alert(result.message || 'Failed to cancel booking.');
+            }
+        } catch (error) {
+            console.log('Server not available, using localStorage fallback');
+            // Fallback to localStorage logic
+            const data = bookingData[slotId];
+            
+            if (listType === 'booked') {
+                const index = data.booked.indexOf(name);
+                if (index > -1) {
+                    data.booked.splice(index, 1);
+                    
+                    // Move first person from reserve to booked if available
+                    if (data.reserve.length > 0) {
+                        const reserveName = data.reserve.shift();
+                        data.booked.push(reserveName);
+                    }
+                }
+            } else if (listType === 'reserve') {
+                const index = data.reserve.indexOf(name);
+                if (index > -1) {
+                    data.reserve.splice(index, 1);
                 }
             }
-        } else if (listType === 'reserve') {
-            const index = data.reserve.indexOf(name);
-            if (index > -1) {
-                data.reserve.splice(index, 1);
-            }
+            
+            updateSlot(slotId);
+            saveBookingData();
+            alert(`${name}'s booking has been cancelled.`);
         }
-        
-        updateSlot(slotId);
-        saveBookingData();
-        alert(`${name}'s booking has been cancelled.`);
     }
 }
 
@@ -346,15 +425,37 @@ function toggleFitnessBooking() {
 }
 
 // Clear all bookings
-function clearAllBookings() {
+async function clearAllBookings() {
     if (confirm('Are you sure you want to clear all bookings? This action cannot be undone.')) {
-        Object.keys(bookingData).forEach(slotId => {
-            bookingData[slotId].booked = [];
-            bookingData[slotId].reserve = [];
-        });
-        updateAllSlots();
-        saveBookingData();
-        alert('All bookings have been cleared.');
+        try {
+            // Try to clear bookings via server API
+            const response = await fetch('/api/clear', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // Reload data from server to get updated state
+                await loadBookingData();
+                alert('All bookings have been cleared.');
+            } else {
+                alert('Failed to clear bookings.');
+            }
+        } catch (error) {
+            console.log('Server not available, using localStorage fallback');
+            // Fallback to localStorage logic
+            Object.keys(bookingData).forEach(slotId => {
+                bookingData[slotId].booked = [];
+                bookingData[slotId].reserve = [];
+            });
+            updateAllSlots();
+            saveBookingData();
+            alert('All bookings have been cleared.');
+        }
     }
 }
 
